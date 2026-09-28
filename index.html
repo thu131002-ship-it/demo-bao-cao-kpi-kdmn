@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Báo cáo KPI phòng Kinh doanh Miền Nam</title>
+<style>
+/* Theme "Simplifica" (Power BI): nền #FFFFFF, chữ #062F4F, màu chính #1025BA,
+   good #7CBB00, neutral #FFBB00 / #F8EA75, bad #FE6868 / #B82601, visual bo góc 12, không viền */
+:root{
+  --bg:#FFFFFF; --panel:#F9F8F8; --panel-2:#F1F0EF; --surface:#FFFFFF;
+  --ink:#062F4F; --muted:#5F6B6D; --line:#E4E3E2; --accent:#1025BA; --on-accent:#FFFFFF;
+  --band:#EDEFFB; --row-sel:#F2F3FC;
+  --ok:#7CBB00; --warn:#FFBB00; --bad:#FE6868; --na:#999895;
+  --ok-ink:#4E7A00; --warn-ink:#9A6B00; --bad-ink:#B82601; --na-ink:#7F898A;
+  --ok-soft:#EEF6DC; --warn-soft:#FDF6D2; --bad-soft:#FFE7E5;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#061A2B; --panel:#0C2539; --panel-2:#10304A; --surface:#0C2539;
+    --ink:#E6EEF6; --muted:#9CAAB6; --line:#1D3B55; --accent:#8C9BFF; --on-accent:#061A2B;
+    --band:#15305E; --row-sel:#132B4F;
+    --ok:#8FD11A; --warn:#FFC933; --bad:#FF7F7F; --na:#7F898A;
+    --ok-ink:#9BDB2A; --warn-ink:#FFC933; --bad-ink:#FF8A80; --na-ink:#9CAAB6;
+    --ok-soft:#1F3A12; --warn-soft:#3D3310; --bad-soft:#44201E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#061A2B; --panel:#0C2539; --panel-2:#10304A; --surface:#0C2539;
+  --ink:#E6EEF6; --muted:#9CAAB6; --line:#1D3B55; --accent:#8C9BFF; --on-accent:#061A2B;
+  --band:#15305E; --row-sel:#132B4F;
+  --ok:#8FD11A; --warn:#FFC933; --bad:#FF7F7F; --na:#7F898A;
+  --ok-ink:#9BDB2A; --warn-ink:#FFC933; --bad-ink:#FF8A80; --na-ink:#9CAAB6;
+  --ok-soft:#1F3A12; --warn-soft:#3D3310; --bad-soft:#44201E;
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0;height:100%}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--ink);font-family:'Segoe UI',wf_segoe-ui_normal,'Helvetica Neue',Helvetica,Arial,sans-serif;
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.viewport{width:100%;display:flex;justify-content:center;padding:8px 0}
+.frame{position:relative;overflow:hidden}
+.stage{width:1280px;height:720px;transform-origin:0 0;position:absolute;left:0;top:0;padding:20px 24px;display:flex;flex-direction:column;background:var(--bg)}
+button,select{font:inherit;color:inherit}
+button:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Header */
+.hdr{height:44px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex:none}
+.hdr h1{font-size:20px;line-height:24px;font-weight:700;margin:0;letter-spacing:-.01em}
+.crumb{display:flex;align-items:center;gap:8px;margin-top:3px;font-size:12.5px;color:var(--muted);height:20px}
+.crumb .cur{color:var(--ink);font-weight:600}
+.crumb .lnk{border:0;background:none;padding:0;color:var(--accent);font-weight:600;cursor:pointer}
+.crumb .lnk:hover{text-decoration:underline}
+.crumb select{font-size:12.5px;font-weight:600;border:1px solid var(--line);border-radius:6px;background:var(--surface);padding:1px 6px;height:22px}
+.ctrls{display:flex;align-items:center;gap:10px}
+.ctrl-label{font-size:12px;color:var(--muted);white-space:nowrap}
+.crumb span{white-space:nowrap}
+.seg{display:flex;background:var(--panel);border-radius:10px;padding:3px}
+.seg button{font-size:12.5px;border:0;background:transparent;color:var(--muted);padding:5px 11px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);font-weight:600}
+.gap{width:8px}
+.sim{font-size:11.5px;color:var(--muted);border:1px dashed var(--muted);border-radius:6px;padding:4px 8px;white-space:nowrap}
+
+/* Shared grid: scope column + 6 KPI columns */
+.board{display:grid;grid-template-columns:200px repeat(6,1fr);background:var(--panel);border-radius:12px;overflow:hidden;flex:none}
+.board.dept{grid-template-rows:128px repeat(8,30px)}
+.board.emp{grid-template-rows:128px}
+.scope{grid-row:1;grid-column:1;padding:12px 14px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--panel-2)}
+.board.emp .scope,.board.emp .tile{border-bottom:0}
+.scope .q{font-size:15px;font-weight:700;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scope .c{font-size:11.5px;color:var(--muted);margin-top:1px;white-space:nowrap}
+.tp{margin-top:8px}
+.tp-track{height:5px;border-radius:3px;background:var(--line);position:relative}
+.tp-track i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--ink);opacity:.7}
+.tp-txt{font-size:11px;color:var(--muted);margin-top:4px}
+.legend{display:flex;flex-direction:column;gap:2px;margin-top:7px;font-size:10.5px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:6px}
+
+.tile{padding:11px 12px 10px;border-bottom:1px solid var(--line);border-left:1px solid var(--line);cursor:pointer;position:relative;display:flex;flex-direction:column}
+.tile .top{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;line-height:14px;color:var(--muted)}
+.tile .top .s{font-weight:600}
+.tile .nm{font-size:12px;line-height:14px;font-weight:600;height:28px;overflow:hidden;margin-top:1px}
+.tile .vr{margin-top:3px}
+.tile .v{font-size:24px;line-height:28px;font-weight:700;letter-spacing:-.02em}
+.bullet{height:6px;border-radius:3px;background:var(--line);position:relative;margin-top:7px}
+.bullet i{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+.bullet b{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);border-radius:1px}
+.tile .ft{font-size:11.5px;color:var(--muted);margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile.sel::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--accent)}
+.band{background:var(--band)}
+
+.rowh{grid-column:1;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 10px 0 14px;border-right:1px solid var(--line);background:var(--panel-2);position:relative}
+.rowh.nav{cursor:pointer}
+.rowh.nav:hover .n{color:var(--accent);text-decoration:underline}
+.rowh .n{font-size:12.5px;font-weight:600;line-height:14px;white-space:nowrap}
+.rowh .r{font-size:10.5px;color:var(--muted);line-height:12px;white-space:nowrap}
+.rowh .cnt{font-size:11px;font-weight:600;color:var(--muted);border-radius:10px;padding:1px 7px;background:var(--surface);white-space:nowrap}
+.rowh .chev{color:var(--muted);font-size:14px;margin-left:2px}
+.cell{display:flex;align-items:center;gap:7px;padding:0 12px;border-left:1px solid var(--line);cursor:pointer;font-size:12.5px}
+.cell .val{font-weight:600}
+.cell small{margin-left:auto;color:var(--muted);font-size:11px}
+.r-line{border-top:1px solid var(--line)}
+.r-all{font-weight:700}
+.sq{width:9px;height:9px;border-radius:2px;flex:none;display:inline-block}
+.st-ok{background:var(--ok)} .st-warn{background:var(--warn)} .st-bad{background:var(--bad)} .st-na{background:var(--na)}
+.c-ok{color:var(--ok-ink)} .c-warn{color:var(--warn-ink)} .c-bad{color:var(--bad-ink)} .c-na{color:var(--na-ink)}
+
+/* Detail panels */
+.detail{background:var(--panel);border-radius:12px;overflow:hidden;min-height:0}
+.detail.side{margin-top:14px;flex:1;display:grid;grid-template-columns:544px 1fr;grid-template-rows:44px 1fr}
+.detail.stack{display:grid;grid-template-rows:44px auto 1fr}
+.dh{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:0 16px;border-bottom:1px solid var(--line)}
+.dh h2{margin:0;font-size:13.5px;font-weight:700;white-space:nowrap}
+.dh h2 span{font-weight:500;color:var(--muted);margin-left:8px}
+.dh .f{font-size:11px;color:var(--muted);text-align:right;line-height:13px;max-width:620px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.dl{padding:10px 16px 10px;min-height:0;display:flex;flex-direction:column}
+.side .dl{border-right:1px solid var(--line)}
+.stack .dl{border-bottom:1px solid var(--line)}
+.dl .ct{font-size:11.5px;color:var(--muted);margin-bottom:4px}
+.dr{min-height:0;overflow:auto;padding:0 4px 8px}
+table.lst{width:100%;border-collapse:collapse;font-size:12px}
+.lst th{white-space:nowrap;position:sticky;top:0;background:var(--panel);text-align:left;font-weight:600;color:var(--muted);font-size:11.5px;padding:8px 10px 6px;border-bottom:1px solid var(--line)}
+.lst td{padding:5px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.lst td.num,.lst th.num{text-align:right}
+.lst tr:last-child td{border-bottom:0}
+.lst .dim{color:var(--muted)}
+.clip{display:inline-block;max-width:96px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
+.tag{display:inline-flex;align-items:center;gap:6px}
+.empty{padding:24px 16px;color:var(--muted);font-size:12.5px}
+
+/* Employee view lower area */
+.lower{margin-top:14px;flex:1;min-height:0;display:grid;grid-template-columns:544px 1fr;gap:14px}
+.card{background:var(--panel);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.card .dh{flex:none;height:44px}
+table.prog{width:100%;border-collapse:collapse;font-size:12.5px}
+.prog th{font-size:11.5px;font-weight:600;color:var(--muted);text-align:right;padding:8px 10px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+.prog th:first-child{text-align:left}
+.prog td{padding:0 10px;height:38px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.prog td:first-child{text-align:left;font-weight:600;font-size:12px}
+.prog td:first-child small{display:block;color:var(--muted);font-weight:500;font-size:10.5px}
+.prog tr.kr{cursor:pointer}
+.prog tr.kr:hover td{background:var(--row-sel)}
+.prog tr.band td{background:var(--band)}
+.prog .pv{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.prog .fut{color:var(--na)}
+.rank{font-weight:600}
+.rank small{color:var(--muted);font-weight:500}
+.sum{padding:10px 16px 12px;font-size:12px;line-height:17px;border-top:1px solid var(--line);flex:1;min-height:0;overflow:auto}
+.sum h3{margin:0 0 4px;font-size:12.5px}
+.sum ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}
+.sum li{display:flex;gap:8px;align-items:baseline}
+.sum li .sq{position:relative;top:1px}
+
+/* Transition matrix */
+.mx{border-collapse:separate;border-spacing:3px;font-size:11.5px;margin-top:2px}
+.mx th{font-weight:500;color:var(--muted);padding:0 4px;text-align:right;white-space:nowrap}
+.mx thead th{text-align:center;font-size:10.5px;line-height:12px;vertical-align:bottom;padding-bottom:2px}
+.mx td{width:62px;height:21px;text-align:center;border-radius:5px;font-weight:600;background:var(--panel-2)}
+.mx td.up{background:var(--ok-soft);color:var(--ok)}
+.mx td.dn{background:var(--bad-soft);color:var(--bad)}
+.mx td.eq{color:var(--muted)}
+.mx td.z{color:transparent}
+.mx-note{font-size:11px;color:var(--muted);margin-top:6px;display:flex;gap:14px}
+.mx-note span{display:flex;align-items:center;gap:5px}
+svg text{font-family:inherit}
+@media (prefers-reduced-motion: no-preference){ .bullet i{transition:width .35s ease} }
+</style>
+</head>
+<body>
+<div class="viewport"><div class="frame" id="frame"><div class="stage" id="stage">
+  <header class="hdr">
+    <div>
+      <h1>Báo cáo KPI phòng Kinh doanh Miền Nam</h1>
+      <nav class="crumb" id="crumb" aria-label="Cấp báo cáo"></nav>
+    </div>
+    <div class="ctrls">
+      <span class="ctrl-label">Quý</span>
+      <div class="seg" id="segQ" role="group" aria-label="Chọn quý"></div>
+      <span class="gap"></span>
+      <span class="ctrl-label">Chốt số đến</span>
+      <div class="seg" id="segC" role="group" aria-label="Ngày chốt số"></div>
+      <span class="sim" title="Số liệu được sinh ngẫu nhiên theo data model đã thiết kế">Dữ liệu mô phỏng</span>
+    </div>
+  </header>
+  <main id="view" style="flex:1;min-height:0;display:flex;flex-direction:column"></main>
+</div></div></div>
+
+<script>
+/* =====================================================================
+   1. DATA MODEL (mô phỏng)
+   Dim_Date (DateKey yyyymmdd), Dim_Employee, Dim_Customer, Dim_Product,
+   Dim_Segment, Dim_KPI, Fact_Sales, Fact_CustomerSegment (snapshot RFM
+   cuối tháng), Fact_SegmentChange (tính ra), Fact_Project, Fact_Forecast,
+   Fact_KPITarget, Fact_KPIResult (tính ra)
+   ===================================================================== */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const R=mulberry32(20263);
+const rand=(a,b)=>a+R()*(b-a), randi=(a,b)=>Math.floor(rand(a,b+1)), pick=a=>a[Math.floor(R()*a.length)];
+const gauss=()=>(R()+R()+R()+R()-2)*1.73;
+
+// ---- thời gian ----
+const dk=(y,m,d)=>y*10000+m*100+d;
+const yOf=k=>Math.floor(k/10000), mOf=k=>Math.floor(k/100)%100;
+const lastDay=(y,m)=>new Date(y,m,0).getDate();
+const toD=k=>new Date(yOf(k),mOf(k)-1,k%100);
+const toK=d=>dk(d.getFullYear(),d.getMonth()+1,d.getDate());
+const addDays=(k,n)=>{const d=toD(k);d.setDate(d.getDate()+n);return toK(d)};
+const diffDays=(a,b)=>Math.round((toD(b)-toD(a))/86400000);
+const mi=(y,m)=>y*12+m-1, miY=i=>Math.floor(i/12), miM=i=>i%12+1, miOf=k=>mi(yOf(k),mOf(k));
+const DATA_START=20250701, DATA_END=20260925, Y_START=20260101;
+const fullEnd=i=>dk(miY(i),miM(i),lastDay(miY(i),miM(i)));
+const meKey=i=>Math.min(fullEnd(i),DATA_END);
+const isClosed=i=>fullEnd(i)<=DATA_END;
+const QS=[1,2,3].map(q=>{const m0=3*q-2;return{id:q,label:'Quý '+['I','II','III'][q-1]+'/2026',short:'Q'+q+'/2026',
+  start:dk(2026,m0,1),end:dk(2026,m0+2,lastDay(2026,m0+2)),months:[0,1,2].map(j=>mi(2026,m0+j)),base:meKey(mi(2026,m0)-1)}});
+const qOfMonth=m=>Math.ceil(m/3);
+
+// ---- Dim_Employee ----
+const DOMAIN='@peromalongan.onmicrosoft.com';
+const DIM_EMPLOYEE=[
+  {EmployeeKey:1,MaNV:'BII01',TenNV:'Nguyễn Thị Thùy Trang',TenVietTat:'Trang',MaChamCong:'00075',Email:'trangnguyen'+DOMAIN,ChucDanh:'Quản lý',QuanLyKey:null},
+  {EmployeeKey:2,MaNV:'SAL07',TenNV:'Hồ Thị Xuân Hương',TenVietTat:'Hương',MaChamCong:'00379',Email:'sale7'+DOMAIN,ChucDanh:'Nhân viên kinh doanh',QuanLyKey:1},
+  {EmployeeKey:3,MaNV:'SAL10',TenNV:'Đặng Thị Kim Chi',TenVietTat:'Chi',MaChamCong:'00385',Email:'sale10'+DOMAIN,ChucDanh:'Nhân viên kinh doanh',QuanLyKey:1},
+  {EmployeeKey:4,MaNV:'SAL09',TenNV:'Trương Thị Bảo Trâm',TenVietTat:'Trâm',MaChamCong:'00382',Email:'sale9'+DOMAIN,ChucDanh:'Nhân viên kinh doanh',QuanLyKey:1},
+  {EmployeeKey:5,MaNV:'HAI03',TenNV:'Nguyễn Thị Hải',TenVietTat:'Hải',MaChamCong:'00287',Email:'sale3'+DOMAIN,ChucDanh:'Nhân viên kinh doanh',QuanLyKey:1},
+  {EmployeeKey:6,MaNV:'SAL11',TenNV:'Nguyễn Hữu Nghĩa',TenVietTat:'Nghĩa',MaChamCong:'00386',Email:'sale11'+DOMAIN,ChucDanh:'Nhân viên kinh doanh',QuanLyKey:1},
+  {EmployeeKey:7,MaNV:'LAN01',TenNV:'Bùi Phương Lan',TenVietTat:'Lan',MaChamCong:'00054',Email:'lanbui'+DOMAIN,ChucDanh:'Nhân viên kinh doanh',QuanLyKey:1},
+  {EmployeeKey:8,MaNV:'BEE01',TenNV:'Nguyễn Thị Bé',TenVietTat:'Bé',MaChamCong:'00042',Email:'benguyen'+DOMAIN,ChucDanh:'Nhân viên kinh doanh',QuanLyKey:1},
+];
+const SALES=DIM_EMPLOYEE.filter(e=>e.QuanLyKey===1);
+const EMP=Object.fromEntries(DIM_EMPLOYEE.map(e=>[e.EmployeeKey,e]));
+// tham số mô phỏng hành vi (không thuộc model)
+const SIM={};
+for(const e of SALES) SIM[e.EmployeeKey]={fc:rand(.07,.3),rd:rand(.7,1),np:randi(3,6),g:{1:rand(.88,1.18),2:rand(.88,1.18),3:rand(.85,1.2)}};
+
+// ---- Dim_Product ----
+const DIM_PRODUCT=[
+ ['HL-DAU-01','Hương dâu tây HL01','Hương trái cây','Hương liệu',1,720000],
+ ['BC-SUA-05','Bột cốt sữa BC05','Bột cốt sữa','Bột cốt',1,420000],
+ ['HL-VANI-12','Hương vani HL12','Hương bánh','Hương liệu',1,980000],
+ ['BC-CACAO-02','Bột cốt cacao BC02','Bột cốt cacao','Bột cốt',0,510000],
+ ['HL-CAM-03','Hương cam HL03','Hương trái cây','Hương liệu',0,650000],
+ ['HL-DUA-07','Hương dứa HL07','Hương trái cây','Hương liệu',0,610000],
+ ['HL-BO-09','Hương bơ HL09','Hương bánh','Hương liệu',0,870000],
+ ['BC-TRA-11','Bột cốt trà xanh BC11','Bột cốt trà','Bột cốt',0,560000],
+ ['HL-CAFE-04','Hương cà phê HL04','Hương đồ uống','Hương liệu',0,930000],
+ ['HL-SOCOLA-06','Hương sô-cô-la HL06','Hương bánh','Hương liệu',0,890000],
+ ['BC-DUA-08','Bột cốt dừa BC08','Bột cốt dừa','Bột cốt',0,380000],
+ ['HL-BACHA-10','Hương bạc hà HL10','Hương đồ uống','Hương liệu',0,700000],
+ ['HL-SUA-13','Hương sữa HL13','Hương đồ uống','Hương liệu',0,760000],
+ ['BC-KHOAIMON-14','Bột cốt khoai môn BC14','Bột cốt','Bột cốt',0,450000],
+ ['HL-DAO-15','Hương đào HL15','Hương trái cây','Hương liệu',0,690000],
+].map((p,i)=>({ProductKey:501+i,MaSP:p[0],TenSP:p[1],NhomSP:p[2],NganhHang:p[3],LaMaChuLuc:p[4],GiaBan:p[5]}));
+const KEY_PRODUCTS=DIM_PRODUCT.filter(p=>p.LaMaChuLuc), OTHER_PRODUCTS=DIM_PRODUCT.filter(p=>!p.LaMaChuLuc);
+
+// ---- Dim_Segment ----
+const DIM_SEGMENT=[
+  {SegmentKey:1,TenHang:'Champion',ThuHang:1,QuyTac:'Mua trong 1 tháng gần nhất, có mua ≥5/6 tháng, doanh thu 6 tháng ≥ 600 tr',HanhDong:'Giữ chân: ưu tiên dự án mới, chăm sóc định kỳ'},
+  {SegmentKey:2,TenHang:'Loyal',ThuHang:2,QuyTac:'Có mua ≥4/6 tháng gần nhất',HanhDong:'Bán thêm SKU, tăng giá trị đơn'},
+  {SegmentKey:3,TenHang:'Big Spender',ThuHang:3,QuyTac:'Doanh thu 6 tháng ≥ 600 tr nhưng mua thưa',HanhDong:'Tăng tần suất: lịch đặt hàng định kỳ'},
+  {SegmentKey:4,TenHang:'Potential',ThuHang:4,QuyTac:'Còn mua trong 2 tháng gần nhất, chưa vào các nhóm trên',HanhDong:'Phát triển: giới thiệu dự án, gửi mẫu'},
+  {SegmentKey:5,TenHang:'At Risk',ThuHang:5,QuyTac:'Không phát sinh đơn ≥3 tháng',HanhDong:'Liên hệ lại, tìm nguyên nhân ngừng mua'},
+];
+const SEG=Object.fromEntries(DIM_SEGMENT.map(s=>[s.SegmentKey,s]));
+
+// ---- Dim_KPI ----
+const DIM_KPI=[
+  {KPIKey:1,Ten:'Doanh thu KH hiện có',Ky:'quy',CongThuc:'Doanh thu trong quý của khách hàng có đơn đầu tiên trước 2026, chia cho target quý.'},
+  {KPIKey:2,Ten:'Nâng hạng khách hàng',Ky:'quy',CongThuc:'Số KH có hạng tại ngày chốt cao hơn hạng cuối quý trước (snapshot RFM cuối tháng), chia cho target.'},
+  {KPIKey:3,Ten:'Doanh thu KH mới',Ky:'nam',CongThuc:'Doanh thu từ 01/01 đến ngày chốt của khách hàng có đơn đầu tiên trong 2026, chia cho target.'},
+  {KPIKey:4,Ten:'Dự án mới',Ky:'quy',CongThuc:'Số dự án ghi nhận lần đầu trong quý của KH chủ lực và KH tiềm năng, chia cho target.'},
+  {KPIKey:5,Ten:'Sai số dự báo mã chủ lực',Ky:'quy',CongThuc:'Σ|thực tế − dự báo| / Σ dự báo trên các mã chủ lực, chỉ tính tháng đã khép sổ. Đạt khi ≤ 20%.'},
+  {KPIKey:6,Ten:'Dự án có phản hồi R&D',Ky:'quy',CongThuc:'Số dự án gửi mẫu trong quý đã có kết quả trả về R&D, chia cho tổng dự án đã gửi mẫu.'},
+];
+
+// ---- Dim_Customer + Fact_Sales ----
+const CUST_NAMES=['Thực phẩm An Khang','Nước giải khát Sao Mai','Bánh kẹo Minh Phát','Sữa Đồng Xanh','Kem Tuyết Sơn','Trà sữa Mây Hồng',
+ 'Bánh mì Hương Quê','Đồ uống Việt Hưng','Thạch dừa Xanh Lam','Mứt Phúc An','Bánh Nguyệt Cát','Siro Hoa Lan','Kẹo dẻo Bảy Màu',
+ 'Cà phê Đất Đỏ','Nước ép Nhiệt Đới','Bánh quy Gia Hòa','Sữa chua Mộc Lam','Chè Ngọc Trai','Rau câu Thiên Thanh','Snack Giòn Tan',
+ 'Kem que Tuổi Thơ','Ngũ cốc Hạt Vàng','Nước tăng lực Sóng Lớn','Bánh bông lan Mai Vàng','Trà thảo mộc Núi Xanh','Kẹo Hạnh Nhân',
+ 'Đồ hộp Phương Nam','Bánh pía Sóc Xanh','Sữa hạt Lúa Mới','Syrup Cửu Long','Bánh su Bông Tuyết','Kem tươi Phố Biển','Nước dừa Xứ Dừa',
+ 'Thực phẩm Bình Minh','Bánh tráng Gió Nam','Chè Hoa Sen','Sữa đậu nành Hạt Ngọc','Kẹo gừng Ấm Áp','Vang trái cây Đồi Hồng',
+ 'Nước ép Vườn Nhà','Pha chế Tân Tiến','Trà chanh Phố Nhỏ','Bánh flan Mộc Mạc','Bánh trung thu Trăng Vàng','Kem sữa Đồng Nội',
+ 'Sinh tố Mùa Hạ','Bánh dẻo Hoa Cau','Nước mía Đồng Quê','Trà đào Gió Mát','Sữa bắp Nắng Mai','Thạch Biển Xanh','Bánh gạo Hạt Ngọc',
+ 'Kẹo sữa Bến Nghé','Siro Trái Cây Việt','Kem dừa Sông Tiền','Bánh cuộn Mây Trắng'];
+const PROVINCES=['TP.HCM','TP.HCM','TP.HCM','Bình Dương','Đồng Nai','Long An','Cần Thơ','Tây Ninh','Bà Rịa - Vũng Tàu'];
+const PREFIX=['Cty TNHH','Cty CP','Cơ sở'];
+const DIM_CUSTOMER=[], PROFILE={}, FACT_SALES=[];
+let ck=101, nameIx=0, hd=1;
+const M_FIRST=mi(2025,7), M_LAST=mi(2026,9);
+for(const e of SALES){
+  for(const role of ['chuluc','chuluc','bigspender','regular','regular','new','new','new']){
+    const k=ck++;
+    const c={CustomerKey:k,MaKH:'KH'+(1000+k),TenKH:pick(PREFIX)+' '+CUST_NAMES[nameIx++%CUST_NAMES.length],NhomKH:'Thường',NhomTiemNang:null,
+      NgayDonDauTien:null,EmployeeKey_PhuTrach:e.EmployeeKey,TinhThanh:pick(PROVINCES)};
+    const p={role,up:null,down:null,start:M_FIRST};
+    const oldDate=()=>dk(randi(2020,2024),randi(1,12),randi(1,28));
+    const month2026=()=>mi(2026,randi(1,8));
+    if(role==='chuluc'){c.NhomKH='Chủ lực';p.base=rand(110e6,190e6);p.p=.93;c.NgayDonDauTien=oldDate();if(R()<.25)p.down=month2026();}
+    if(role==='bigspender'){c.NhomKH='Chủ lực';p.base=rand(330e6,470e6);p.p=.38;c.NgayDonDauTien=oldDate();if(R()<.65){p.up=month2026();p.pUp=1;}}
+    if(role==='regular'){p.base=rand(22e6,60e6);p.p=rand(.5,.8);c.NgayDonDauTien=oldDate();
+      const r=R(); if(r<.4){p.up=month2026();p.pUp=.97;} else if(r<.55)p.down=month2026();}
+    if(role==='new'){c.NhomKH='Tiềm năng';c.NhomTiemNang=pick(['Nhóm 1','Nhóm 2','Nhóm 2','Nhóm 3']);p.base=rand(18e6,85e6);p.p=.8;p.start=mi(2026,randi(1,8));}
+    DIM_CUSTOMER.push(c); PROFILE[k]=p;
+  }
+}
+const CUS=Object.fromEntries(DIM_CUSTOMER.map(c=>[c.CustomerKey,c]));
+for(const c of DIM_CUSTOMER){
+  const p=PROFILE[c.CustomerKey], sim=SIM[c.EmployeeKey_PhuTrach];
+  for(let i=Math.max(M_FIRST,p.start);i<=M_LAST;i++){
+    const y=miY(i), m=miM(i);
+    let prob=p.p;
+    if(p.up!==null&&i>=p.up) prob=p.pUp;
+    if(p.down!==null&&i>=p.down) prob=.3;
+    if(p.role==='new'&&i===p.start) prob=1;
+    if(R()>=prob) continue;
+    const date=dk(y,m,i===M_LAST?randi(1,25):randi(1,28));
+    let amt=p.base*rand(.75,1.25)*(p.up!==null&&i>=p.up?1.3:1);
+    if(y===2026&&p.role!=='new') amt*=sim.g[qOfMonth(m)];
+    if(p.role==='new') amt*=Math.min(1,.5+.15*(i-p.start));
+    const so='HD'+String(yOf(date)).slice(2)+'-'+String(hd++).padStart(5,'0');
+    const n=randi(1,3), ws=Array.from({length:n},()=>rand(.5,1.5)), wsum=ws.reduce((a,b)=>a+b,0), used=new Set();
+    for(let j=0;j<n;j++){
+      let prod; do{prod=(j===0&&R()<.75)?pick(KEY_PRODUCTS):pick(R()<.3?KEY_PRODUCTS:OTHER_PRODUCTS)}while(used.has(prod.ProductKey)); used.add(prod.ProductKey);
+      const qty=Math.max(5,Math.round(amt*ws[j]/wsum/prod.GiaBan));
+      FACT_SALES.push({SalesLineID:900000+FACT_SALES.length+1,SoHD:so,DateKey:date,CustomerKey:c.CustomerKey,ProductKey:prod.ProductKey,
+        EmployeeKey:c.EmployeeKey_PhuTrach,SoLuong:qty,DoanhThu:qty*prod.GiaBan});
+    }
+    if(p.role==='new'&&!c.NgayDonDauTien) c.NgayDonDauTien=date;
+  }
+}
+
+// ---- Fact_CustomerSegment: snapshot RFM cuối mỗi tháng, cửa sổ 6 tháng ----
+const buyMonths={}, monthRev={};
+for(const s of FACT_SALES){const i=miOf(s.DateKey);(buyMonths[s.CustomerKey]??=new Set()).add(i);monthRev[s.CustomerKey+'_'+i]=(monthRev[s.CustomerKey+'_'+i]||0)+s.DoanhThu}
+function classify(Rv,F,M){if(Rv>=3)return 5;if(Rv<=1&&F>=5&&M>=600e6)return 1;if(F>=4)return 2;if(M>=600e6)return 3;return 4}
+const FACT_CUSTOMER_SEGMENT=[], SEG_IDX={};
+for(let i=mi(2025,12);i<=M_LAST;i++){
+  const key=meKey(i);
+  for(const c of DIM_CUSTOMER){
+    if(!c.NgayDonDauTien||c.NgayDonDauTien>key) continue;
+    const bm=[...(buyMonths[c.CustomerKey]||[])].filter(x=>x<=i);
+    const Rv=bm.length?i-Math.max(...bm):9, win=bm.filter(x=>x>i-6);
+    const M=win.reduce((a,x)=>a+(monthRev[c.CustomerKey+'_'+x]||0),0);
+    const row={SnapshotID:FACT_CUSTOMER_SEGMENT.length+1,CustomerKey:c.CustomerKey,SnapshotDateKey:key,R:Rv,F:win.length,M,
+      SegmentKey:classify(Rv,win.length,M),EmployeeKey:c.EmployeeKey_PhuTrach};
+    FACT_CUSTOMER_SEGMENT.push(row); SEG_IDX[c.CustomerKey+'_'+key]=row;
+  }
+}
+
+// ---- Fact_Project ----
+const FACT_PROJECT=[]; let pj=1;
+for(const e of SALES){
+  const sim=SIM[e.EmployeeKey], mine=DIM_CUSTOMER.filter(c=>c.EmployeeKey_PhuTrach===e.EmployeeKey);
+  const good=mine.filter(c=>c.NhomKH!=='Thường'), other=mine.filter(c=>c.NhomKH==='Thường');
+  const mk=gn=>{
+    const c=R()<.82?pick(good):pick(other);
+    let gm=addDays(gn,randi(6,20)); if(gm>DATA_END) gm=null;
+    let ph=null; if(gm&&R()<sim.rd){ph=addDays(gm,randi(4,16)); if(ph>DATA_END) ph=null;}
+    FACT_PROJECT.push({ProjectKey:7000+pj,MaDuAn:'DA26-'+String(pj++).padStart(3,'0'),CustomerKey:c.CustomerKey,EmployeeKey:e.EmployeeKey,
+      DateKey_GhiNhan:gn,DateKey_GuiMau:gm,DateKey_PhanHoiRD:ph});
+  };
+  mk(dk(2025,12,randi(1,20)));
+  for(const Q of QS){
+    const last=Math.min(Q.end,DATA_END), n=Math.max(2,sim.np+randi(-1,1));
+    for(let i=0;i<n;i++) mk(addDays(Q.start,randi(0,diffDays(Q.start,last))));
+  }
+}
+FACT_PROJECT.sort((a,b)=>a.DateKey_GhiNhan-b.DateKey_GhiNhan).forEach((p,i)=>{p.MaDuAn='DA26-'+String(i+1).padStart(3,'0')});
+
+// ---- Fact_Forecast (mã chủ lực × tháng × nhân viên) ----
+const QTY={};
+for(const s of FACT_SALES){const k=s.EmployeeKey+'_'+s.ProductKey+'_'+miOf(s.DateKey);QTY[k]=(QTY[k]||0)+s.SoLuong}
+const qtyOf=(e,p,i)=>QTY[e+'_'+p+'_'+i]||0;
+const FACT_FORECAST=[];
+for(const e of SALES) for(const p of KEY_PRODUCTS) for(let i=mi(2026,1);i<=M_LAST;i++){
+  let a=qtyOf(e.EmployeeKey,p.ProductKey,i); if(!isClosed(i)) a=a*30/25;
+  if(a===0) continue;
+  const err=Math.max(-.7,gauss()*SIM[e.EmployeeKey].fc);
+  FACT_FORECAST.push({ForecastID:FACT_FORECAST.length+1,MonthKey:dk(miY(i),miM(i),1),ProductKey:p.ProductKey,EmployeeKey:e.EmployeeKey,SL_DuBao:Math.round(a*(1+err))});
+}
+
+// ---- Fact_KPITarget (nhân viên × KPI × quý) ----
+const roundTo=(v,s)=>Math.max(s,Math.round(v/s)*s);
+const isExisting=c=>c.NgayDonDauTien&&c.NgayDonDauTien<Y_START;
+const isNew=c=>c.NgayDonDauTien&&c.NgayDonDauTien>=Y_START;
+const sumSales=(e,from,to,f)=>FACT_SALES.reduce((a,s)=>(s.EmployeeKey===e&&s.DateKey>=from&&s.DateKey<=to&&f(CUS[s.CustomerKey]))?a+s.DoanhThu:a,0);
+const FACT_KPITARGET=[];
+for(const Q of QS) for(const e of SALES){
+  const k=e.EmployeeKey;
+  let qa=sumSales(k,Q.start,Math.min(Q.end,20260831),isExisting); if(Q.end>20260831) qa*=1.5;
+  let ytd=sumSales(k,Y_START,Math.min(Q.end,20260831),isNew); if(Q.end>20260831) ytd*=9/8;
+  const t={1:roundTo(qa*rand(.88,1.15),50e6),2:randi(2,3),3:roundTo(ytd*rand(.92,1.2),50e6),4:randi(4,5),5:.2,6:1};
+  for(const kp of DIM_KPI) FACT_KPITARGET.push({TargetID:FACT_KPITARGET.length+1,EmployeeKey:k,KPIKey:kp.KPIKey,QuarterKey:2026*10+Q.id,GiaTriTarget:t[kp.KPIKey]});
+}
+const targetOf=(e,kpi,Q)=>FACT_KPITARGET.reduce((a,t)=>(t.KPIKey===kpi&&t.QuarterKey===2026*10+Q.id&&(e==='all'||t.EmployeeKey===e))?a+t.GiaTriTarget:a,0);
+
+/* =====================================================================
+   2. TẦNG TÍNH KPI (thay cho ETL sinh Fact_KPIResult)
+   ===================================================================== */
+const inScope=(e,x)=>e==='all'||x.EmployeeKey===e;
+const timeProg=(kpi,Q,C)=>DIM_KPI[kpi-1].Ky==='nam'
+  ?(diffDays(Y_START,C)+1)/(diffDays(Y_START,Q.end)+1):(diffDays(Q.start,C)+1)/(diffDays(Q.start,Q.end)+1);
+
+function segmentChanges(e,Q,C){
+  const out=[];
+  for(const now of FACT_CUSTOMER_SEGMENT){
+    if(now.SnapshotDateKey!==C||!inScope(e,now)) continue;
+    const base=SEG_IDX[now.CustomerKey+'_'+Q.base]; if(!base) continue;
+    const d=SEG[base.SegmentKey].ThuHang-SEG[now.SegmentKey].ThuHang;
+    out.push({CustomerKey:now.CustomerKey,EmployeeKey:now.EmployeeKey,From:base.SegmentKey,To:now.SegmentKey,HuongThayDoi:d>0?'Nâng hạng':d<0?'Hạ hạng':'Giữ hạng',M:now.M,F:now.F});
+  }
+  return out;
+}
+function wapeMonths(e,months,prod){
+  let n=0,d=0;
+  for(const f of FACT_FORECAST){
+    const i=miOf(f.MonthKey);
+    if(!inScope(e,f)||!months.includes(i)||(prod&&f.ProductKey!==prod)) continue;
+    n+=Math.abs(qtyOf(f.EmployeeKey,f.ProductKey,i)-f.SL_DuBao); d+=f.SL_DuBao;
+  }
+  return d?n/d:null;
+}
+const closedMonths=(Q,cutI)=>Q.months.filter(i=>i<=cutI&&isClosed(i));
+function kpiActual(kpi,e,Q,C){
+  switch(kpi){
+    case 1: return FACT_SALES.reduce((a,s)=>(inScope(e,s)&&s.DateKey>=Q.start&&s.DateKey<=C&&isExisting(CUS[s.CustomerKey]))?a+s.DoanhThu:a,0);
+    case 2: return segmentChanges(e,Q,C).filter(x=>x.HuongThayDoi==='Nâng hạng').length;
+    case 3: return FACT_SALES.reduce((a,s)=>(inScope(e,s)&&s.DateKey>=Y_START&&s.DateKey<=C&&isNew(CUS[s.CustomerKey]))?a+s.DoanhThu:a,0);
+    case 4: return FACT_PROJECT.filter(p=>inScope(e,p)&&p.DateKey_GhiNhan>=Q.start&&p.DateKey_GhiNhan<=C&&CUS[p.CustomerKey].NhomKH!=='Thường').length;
+    case 5: return wapeMonths(e,closedMonths(Q,miOf(C)));
+    case 6: {const sent=FACT_PROJECT.filter(p=>inScope(e,p)&&p.DateKey_GuiMau&&p.DateKey_GuiMau>=Q.start&&p.DateKey_GuiMau<=C);
+             const back=sent.filter(p=>p.DateKey_PhanHoiRD&&p.DateKey_PhanHoiRD<=C);
+             return {n:back.length,d:sent.length,v:sent.length?back.length/sent.length:null};}
+  }
+}
+const CACHE=new Map();
+function kpiResult(kpi,e,Q,cutI){
+  const key=kpi+'|'+e+'|'+Q.id+'|'+cutI; if(CACHE.has(key)) return CACHE.get(key);
+  const C=meKey(cutI), tp=timeProg(kpi,Q,C), T=targetOf(e,kpi,Q), a=kpiActual(kpi,e,Q,C);
+  const r={kpi,e,Q,cutI,C,tp,target:T};
+  if(kpi<=4){
+    r.actual=a; r.ratio=T?a/T:0; const pace=r.ratio/tp;
+    if(C>=Q.end){r.st=r.ratio>=1?'ok':r.ratio>=.85?'warn':'bad';r.label={ok:'Đạt',warn:'Gần đạt',bad:'Không đạt'}[r.st];}
+    else{r.st=(r.ratio>=1||pace>=1)?'ok':pace>=.85?'warn':'bad';r.label={ok:'Đúng tiến độ',warn:'Cần chú ý',bad:'Chậm tiến độ'}[r.st];} r.big=pct(r.ratio); r.score=r.ratio;
+  } else if(kpi===5){
+    r.actual=a; r.target=.2;
+    if(a===null){r.st='na';r.label='Chưa khép sổ';r.big='–';r.score=-Infinity}
+    else{r.st=a<=.2?'ok':a<=.25?'warn':'bad';r.label={ok:'Đạt',warn:'Sát ngưỡng',bad:'Không đạt'}[r.st];r.big=pct(a,1);r.score=-a}
+  } else {
+    r.actual=a.v; r.n=a.n; r.d=a.d; r.target=1;
+    if(a.v===null){r.st='na';r.label='Chưa phát sinh';r.big='–';r.score=-Infinity}
+    else{r.st=a.v>=.95?'ok':a.v>=.8?'warn':'bad';r.label={ok:'Đạt',warn:'Cần chú ý',bad:'Không đạt'}[r.st];r.big=pct(a.v);r.score=a.v}
+  }
+  CACHE.set(key,r); return r;
+}
+function rankOf(kpi,e,Q,cutI){
+  const arr=SALES.map(s=>kpiResult(kpi,s.EmployeeKey,Q,cutI)).sort((a,b)=>b.score-a.score);
+  const me=kpiResult(kpi,e,Q,cutI); if(me.score===-Infinity) return null;
+  return arr.findIndex(r=>r.score===me.score)+1;
+}
+
+/* =====================================================================
+   3. HIỂN THỊ
+   ===================================================================== */
+function pct(x,d=0){return (x*100).toLocaleString('vi-VN',{minimumFractionDigits:d,maximumFractionDigits:d})+'%'}
+function money(v){return v>=1e9?(v/1e9).toLocaleString('vi-VN',{maximumFractionDigits:2})+' tỷ':Math.round(v/1e6).toLocaleString('vi-VN')+' tr'}
+const num=v=>Math.round(v).toLocaleString('vi-VN');
+const dd=k=>k?String(k%100).padStart(2,'0')+'/'+String(mOf(k)).padStart(2,'0'):'';
+const ddmmyyyy=k=>dd(k)+'/'+yOf(k);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dot=(st,t)=>`<span class="tag"><i class="sq st-${st}"></i>${t}</span>`;
+
+const state={view:'dept',q:3,cut:mi(2026,8),emp:2,kpi:1};
+const curQ=()=>QS[state.q-1];
+const R_=(k,e)=>kpiResult(k,e,curQ(),state.cut);
+
+function renderHeader(){
+  document.getElementById('segQ').innerHTML=QS.map(Q=>`<button type="button" data-q="${Q.id}" aria-pressed="${state.q===Q.id}">${Q.short}</button>`).join('');
+  document.getElementById('segC').innerHTML=curQ().months.filter(i=>i<=M_LAST).map(i=>
+    `<button type="button" data-cut="${i}" aria-pressed="${state.cut===i}">${dd(meKey(i))}${isClosed(i)?'':' (tạm tính)'}</button>`).join('');
+  const c=document.getElementById('crumb');
+  if(state.view==='dept') c.innerHTML=`<span class="cur">Toàn phòng KDMN</span><span>Bấm tên nhân viên để xem chi tiết</span>`;
+  else c.innerHTML=`<button type="button" class="lnk" data-go="dept">Toàn phòng KDMN</button><span aria-hidden="true">/</span>
+    <label class="sr" for="empSel" style="position:absolute;left:-9999px">Nhân viên</label>
+    <select id="empSel">${SALES.map(s=>`<option value="${s.EmployeeKey}" ${s.EmployeeKey===state.emp?'selected':''}>${s.TenNV}</option>`).join('')}</select>`;
+}
+
+function shortFoot(r){
+  switch(r.kpi){
+    case 1: case 3: return money(r.actual)+' / '+money(r.target);
+    case 2: return r.actual+' / '+r.target+' KH nâng hạng';
+    case 4: return r.actual+' / '+r.target+' dự án';
+    case 5: return 'Ngưỡng đạt ≤ 20%';
+    case 6: return r.d?r.n+' / '+r.d+' dự án đã gửi mẫu':'Chưa có dự án gửi mẫu';
+  }
+}
+function cellSmall(r){switch(r.kpi){case 1:case 3:return money(r.actual);case 2:case 4:return r.actual+'/'+r.target;case 5:return '';case 6:return r.d?r.n+'/'+r.d:''}}
+function bullet(r){
+  const col=`var(--${r.st})`;
+  if(r.kpi<=4){const s=1.25;return `<div class="bullet" aria-hidden="true"><i style="width:${Math.min(r.ratio,s)/s*100}%;background:${col}"></i><b style="left:calc(${r.tp/s*100}% - 1px)"></b></div>`}
+  if(r.kpi===5){const s=.4,v=r.actual??0;return `<div class="bullet" aria-hidden="true"><i style="width:${Math.min(v,s)/s*100}%;background:${col}"></i><b style="left:calc(50% - 1px)"></b></div>`}
+  return `<div class="bullet" aria-hidden="true"><i style="width:${(r.actual??0)*100}%;background:${col}"></i><b style="left:calc(100% - 2px)"></b></div>`;
+}
+const LEGEND=`<div class="legend"><span><i class="sq st-ok"></i>Đạt hoặc đúng tiến độ</span><span><i class="sq st-warn"></i>Cần chú ý</span><span><i class="sq st-bad"></i>Chậm tiến độ hoặc không đạt</span></div>`;
+function timeBlock(){const tp=timeProg(1,curQ(),meKey(state.cut));
+  return `<div class="tp"><div class="tp-track"><i style="width:${tp*100}%"></i></div><div class="tp-txt">Đã qua ${pct(tp)} thời gian quý</div></div>`}
+function tilesHTML(e){
+  return DIM_KPI.map(k=>{const r=R_(k.KPIKey,e), sel=state.kpi===k.KPIKey;
+    return `<div class="tile ${sel?'sel band':''}" tabindex="0" role="button" aria-pressed="${sel}" data-kpi="${k.KPIKey}" title="${esc(k.CongThuc)}">
+      <div class="top"><span>KPI ${k.KPIKey}</span><span class="s c-${r.st}">${r.label}</span></div>
+      <div class="nm">${k.Ten}</div><div class="vr"><span class="v c-${r.st}">${r.big}</span></div>
+      ${bullet(r)}<div class="ft">${shortFoot(r)}</div></div>`}).join('');
+}
+
+/* ---------- Chart ---------- */
+function barChart({labels,values,plan,ref,fmt,max,st,H}){
+  const W=560,pl=46,pr=98,pt=16,pb=24,iw=W-pl-pr,ih=H-pt-pb;
+  const raw=max||Math.max(1e-9,...values.filter(v=>v!=null),...(plan||[]).filter(v=>v!=null),ref?ref.v:0)*1.1;
+  const b10=Math.pow(10,Math.floor(Math.log10(raw/4))), step=[1,1.5,2,2.5,3,4,5,6,8,10].map(c=>c*b10).find(s=>s*4>=raw), mx=step*4;
+  const y=v=>pt+ih-(v/mx)*ih, bw=Math.min(46,iw/labels.length*.52);
+  let g='';
+  for(let i=0;i<=4;i++){const v=mx*i/4;g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl-6}" y="${y(v)+3.5}" text-anchor="end" font-size="10" fill="var(--muted)">${fmt(v)}</text>`}
+  labels.forEach((l,i)=>{
+    const cx=pl+iw*(i+.5)/labels.length, v=values[i];
+    if(v!=null) g+=`<rect x="${cx-bw/2}" y="${y(v)}" width="${bw}" height="${Math.max(0,pt+ih-y(v))}" rx="3" fill="var(--${st[i]})"/><text x="${cx}" y="${Math.min(y(v),plan&&plan[i]!=null?y(plan[i]):Infinity)-6}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--ink)">${fmt(v)}</text>`;
+    else g+=`<rect x="${cx-bw/2}" y="${pt+ih-16}" width="${bw}" height="16" rx="3" fill="none" stroke="var(--line)" stroke-dasharray="3 3"/>`;
+    if(plan&&plan[i]!=null) g+=`<line x1="${cx-bw/2-5}" x2="${cx+bw/2+5}" y1="${y(plan[i])}" y2="${y(plan[i])}" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 3"/>`;
+    g+=`<text x="${cx}" y="${H-7}" text-anchor="middle" font-size="10.5" fill="var(--muted)">${l}</text>`;
+  });
+  if(ref) g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(ref.v)}" y2="${y(ref.v)}" stroke="var(--accent)" stroke-width="1.5"/><text x="${W-pr+6}" y="${y(ref.v)+3.5}" font-size="10.5" font-weight="600" fill="var(--accent)">${ref.label}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Biểu đồ tiến độ">${g}</svg>`;
+}
+const stPace=(ratio,tp)=>{const p=ratio/tp;return (ratio>=1||p>=1)?'ok':p>=.85?'warn':'bad'};
+function leftPanel(k,e,H){
+  const Q=curQ(), cut=state.cut, T=targetOf(e,k,Q), mLab=i=>'Tháng '+miM(i);
+  if(k===1||k===4){
+    const vals=Q.months.map(i=>i<=cut?kpiActual(k,e,Q,meKey(i)):null);
+    const plan=Q.months.map(i=>T*timeProg(k,Q,fullEnd(i)));
+    const st=Q.months.map((i,j)=>vals[j]==null?'na':stPace(vals[j]/T,timeProg(k,Q,meKey(i))));
+    return {cap:'Lũy kế từ đầu quý so với kế hoạch lũy kế (vạch đứt) và target quý',
+      html:barChart({labels:Q.months.map(mLab),values:vals,plan,ref:{v:T,label:'Target '+(k===1?money(T):T)},fmt:k===1?money:num,st,H})};
+  }
+  if(k===3){
+    const ms=[]; for(let i=mi(2026,1);i<=Q.months[2];i++) ms.push(i);
+    const vals=ms.map(i=>i<=cut?kpiActual(3,e,Q,meKey(i)):null), plan=ms.map(i=>T*timeProg(3,Q,fullEnd(i)));
+    const st=ms.map((i,j)=>vals[j]==null?'na':stPace(vals[j]/T,timeProg(3,Q,meKey(i))));
+    return {cap:'Doanh thu KH mới lũy kế từ tháng 1 so với kế hoạch lũy kế (vạch đứt)',
+      html:barChart({labels:ms.map(i=>'T'+miM(i)),values:vals,plan,ref:{v:T,label:'Target '+money(T)},fmt:money,st,H})};
+  }
+  if(k===5){
+    const vals=Q.months.map(i=>(i<=cut&&isClosed(i))?wapeMonths(e,[i]):null);
+    const st=vals.map(v=>v==null?'na':v<=.2?'ok':v<=.25?'warn':'bad');
+    return {cap:'Sai số dự báo theo tháng. Tháng chưa khép sổ chưa được tính.',
+      html:barChart({labels:Q.months.map(mLab),values:vals,ref:{v:.2,label:'Ngưỡng 20%'},fmt:v=>pct(v),max:Math.max(.36,...vals.filter(v=>v!=null)),st,H})};
+  }
+  if(k===6){
+    const vals=Q.months.map(i=>i<=cut?kpiActual(6,e,Q,meKey(i)).v:null);
+    const st=vals.map(v=>v==null?'na':v>=.95?'ok':v>=.8?'warn':'bad');
+    return {cap:'Tỷ lệ dự án có phản hồi R&D, lũy kế đến cuối mỗi tháng',
+      html:barChart({labels:Q.months.map(mLab),values:vals,ref:{v:1,label:'Mục tiêu 100%'},fmt:v=>pct(v),max:1.1,st,H})};
+  }
+  const ch=segmentChanges(e,Q,meKey(cut));
+  let t='<table class="mx"><thead><tr><th></th>'+DIM_SEGMENT.map(s=>`<th>${s.TenHang}</th>`).join('')+'</tr></thead><tbody>';
+  for(const f of DIM_SEGMENT){
+    t+=`<tr><th>${f.TenHang}</th>`;
+    for(const to of DIM_SEGMENT){const n=ch.filter(x=>x.From===f.SegmentKey&&x.To===to.SegmentKey).length;
+      t+=`<td class="${n===0?'z':to.ThuHang<f.ThuHang?'up':to.ThuHang>f.ThuHang?'dn':'eq'}" title="${f.TenHang} → ${to.TenHang}: ${n} KH">${n}</td>`}
+    t+='</tr>';
+  }
+  const up=ch.filter(x=>x.HuongThayDoi==='Nâng hạng').length, dn=ch.filter(x=>x.HuongThayDoi==='Hạ hạng').length;
+  t+=`</tbody></table><div class="mx-note"><span><i class="sq st-ok"></i>Nâng hạng: ${up} KH</span><span><i class="sq st-bad"></i>Hạ hạng: ${dn} KH</span><span>Giữ hạng: ${ch.length-up-dn} KH</span></div>`;
+  return {cap:`Hàng: hạng tại ${dd(Q.base)}. Cột: hạng tại ${dd(meKey(cut))}.`,html:t};
+}
+
+function listTable(cols,rows,empty){
+  if(!rows.length) return `<div class="empty">${empty}</div>`;
+  return `<table class="lst"><thead><tr>${cols.map(c=>`<th class="${c.num?'num':''}">${c.h}</th>`).join('')}</tr></thead><tbody>`+
+    rows.map(r=>'<tr>'+cols.map(c=>`<td class="${c.num?'num':''} ${c.dim?'dim':''}">${c.f(r)}</td>`).join('')+'</tr>').join('')+'</tbody></table>';
+}
+const empCol={h:'Nhân viên',f:r=>EMP[r.EmployeeKey].TenNV,dim:true};
+function rightPanel(k,e){
+  const Q=curQ(), cut=state.cut, C=meKey(cut), all=e==='all';
+  const withEmp=cols=>all?[cols[0],empCol,...cols.slice(1)]:cols;
+  if(k===1||k===3){
+    const f=k===1?(s=>s.DateKey>=Q.start&&isExisting(CUS[s.CustomerKey])):(s=>s.DateKey>=Y_START&&isNew(CUS[s.CustomerKey]));
+    const agg={};
+    for(const s of FACT_SALES) if(inScope(e,s)&&s.DateKey<=C&&f(s)){(agg[s.CustomerKey]??={CustomerKey:s.CustomerKey,EmployeeKey:s.EmployeeKey,DT:0}).DT+=s.DoanhThu}
+    const rows=Object.values(agg).sort((a,b)=>b.DT-a.DT), tot=rows.reduce((a,r)=>a+r.DT,0);
+    const cols=k===1?[{h:'Khách hàng',f:r=>CUS[r.CustomerKey].TenKH},{h:'Nhóm KH',f:r=>CUS[r.CustomerKey].NhomKH,dim:true},
+      {h:'Doanh thu quý',f:r=>money(r.DT),num:true},{h:'Tỷ trọng',f:r=>pct(r.DT/tot,1),num:true}]
+     :[{h:'Khách hàng mới',f:r=>CUS[r.CustomerKey].TenKH},{h:'Phân loại',f:r=>CUS[r.CustomerKey].NhomTiemNang,dim:true},
+      {h:'Đơn đầu tiên',f:r=>ddmmyyyy(CUS[r.CustomerKey].NgayDonDauTien),dim:true},{h:'Doanh thu lũy kế',f:r=>money(r.DT),num:true},{h:'Tỷ trọng',f:r=>pct(r.DT/tot,1),num:true}];
+    return listTable(withEmp(cols),rows,'Chưa có doanh thu trong kỳ.');
+  }
+  if(k===2){
+    const rows=segmentChanges(e,Q,C).filter(x=>x.HuongThayDoi!=='Giữ hạng').sort((a,b)=>(a.HuongThayDoi<b.HuongThayDoi?1:-1)||SEG[a.To].ThuHang-SEG[b.To].ThuHang);
+    return listTable(withEmp([{h:'Khách hàng',f:r=>CUS[r.CustomerKey].TenKH},
+      {h:'Thay đổi',f:r=>dot(r.HuongThayDoi==='Nâng hạng'?'ok':'bad',r.HuongThayDoi)},
+      {h:'Hạng '+dd(Q.base),f:r=>SEG[r.From].TenHang,dim:true},{h:'Hạng hiện tại',f:r=>`<b>${SEG[r.To].TenHang}</b>`},
+      {h:'DT 6 tháng',f:r=>money(r.M),num:true},
+      {h:'Hành động',f:r=>`<span class="clip" title="${esc(SEG[r.To].HanhDong)}">${SEG[r.To].HanhDong}</span>`,dim:true}]),rows,'Chưa có khách hàng thay đổi hạng so với đầu quý.');
+  }
+  if(k===4){
+    const rows=FACT_PROJECT.filter(p=>inScope(e,p)&&p.DateKey_GhiNhan>=Q.start&&p.DateKey_GhiNhan<=C).sort((a,b)=>b.DateKey_GhiNhan-a.DateKey_GhiNhan);
+    return listTable(withEmp([{h:'Mã dự án',f:r=>r.MaDuAn},{h:'Khách hàng',f:r=>CUS[r.CustomerKey].TenKH},{h:'Nhóm KH',f:r=>CUS[r.CustomerKey].NhomKH,dim:true},
+      {h:'Ghi nhận',f:r=>dd(r.DateKey_GhiNhan),num:true},
+      {h:'Tính vào KPI',f:r=>CUS[r.CustomerKey].NhomKH!=='Thường'?dot('ok','Có'):dot('na','Không')},
+      {h:'Trạng thái',f:r=>r.DateKey_PhanHoiRD&&r.DateKey_PhanHoiRD<=C?'Đã phản hồi R&D':r.DateKey_GuiMau&&r.DateKey_GuiMau<=C?'Đã gửi mẫu':'Thu thập thông tin',dim:true}]),rows,'Chưa có dự án mới trong quý.');
+  }
+  if(k===5){
+    const months=closedMonths(Q,cut), rows=[];
+    for(const p of KEY_PRODUCTS){
+      const fs=FACT_FORECAST.filter(f=>inScope(e,f)&&f.ProductKey===p.ProductKey&&months.includes(miOf(f.MonthKey)));
+      if(!fs.length) continue;
+      const F=fs.reduce((a,f)=>a+f.SL_DuBao,0), A=fs.reduce((a,f)=>a+qtyOf(f.EmployeeKey,f.ProductKey,miOf(f.MonthKey)),0), err=wapeMonths(e,months,p.ProductKey);
+      rows.push({p,F,A,err,st:err<=.2?'ok':err<=.25?'warn':'bad'});
+    }
+    return listTable([{h:'Mã chủ lực',f:r=>r.p.MaSP},{h:'Tên sản phẩm',f:r=>r.p.TenSP,dim:true},
+      {h:'Dự báo (kg)',f:r=>num(r.F),num:true},{h:'Thực tế (kg)',f:r=>num(r.A),num:true},
+      {h:'Chênh lệch',f:r=>(r.A-r.F>0?'+':'')+num(r.A-r.F),num:true},{h:'Sai số',f:r=>`<b class="c-${r.st}">${pct(r.err,1)}</b>`,num:true},
+      {h:'Kết quả',f:r=>dot(r.st,r.st==='ok'?'Đạt':r.st==='warn'?'Sát ngưỡng':'Không đạt')}],rows,'Chưa có tháng nào khép sổ để so sánh dự báo.');
+  }
+  const rows=FACT_PROJECT.filter(p=>inScope(e,p)&&p.DateKey_GuiMau&&p.DateKey_GuiMau>=Q.start&&p.DateKey_GuiMau<=C)
+    .map(p=>({...p,done:!!(p.DateKey_PhanHoiRD&&p.DateKey_PhanHoiRD<=C)})).sort((a,b)=>(a.done-b.done)||a.DateKey_GuiMau-b.DateKey_GuiMau);
+  return listTable(withEmp([{h:'Mã dự án',f:r=>r.MaDuAn},{h:'Khách hàng',f:r=>CUS[r.CustomerKey].TenKH},
+    {h:'Gửi mẫu',f:r=>dd(r.DateKey_GuiMau),num:true},
+    {h:'Phản hồi R&D',f:r=>r.done?dot('ok',dd(r.DateKey_PhanHoiRD)):dot('bad','Đang chờ '+diffDays(r.DateKey_GuiMau,C)+' ngày')}]),rows,'Chưa có dự án gửi mẫu trong quý.');
+}
+function detailInner(e,H){
+  const k=state.kpi, kp=DIM_KPI[k-1], L=leftPanel(k,e,H);
+  return `<div class="dh"><h2>${kp.Ten}<span>${e==='all'?'Toàn phòng KDMN':EMP[e].TenNV}</span></h2><div class="f">${kp.CongThuc}</div></div>
+    <div class="dl"><div class="ct">${L.cap}</div>${L.html}</div><div class="dr">${rightPanel(k,e)}</div>`;
+}
+
+/* ---------- Cấp 1: Trưởng phòng xem toàn phòng ---------- */
+function renderDept(){
+  const Q=curQ(), C=meKey(state.cut);
+  let h=`<div class="scope"><div class="q">${Q.label}</div><div class="c">Số liệu đến ${ddmmyyyy(C)}${isClosed(state.cut)?'':' (tạm tính)'}</div>${timeBlock()}${LEGEND}</div>`+tilesHTML('all');
+  ['all',...SALES.map(s=>s.EmployeeKey)].forEach((e,i)=>{
+    const line=i>0?'r-line':'', rs=DIM_KPI.map(k=>R_(k.KPIKey,e)), okN=rs.filter(r=>r.st==='ok').length;
+    if(e==='all') h+=`<div class="rowh r-all ${line}"><div><div class="n">Toàn phòng KDMN</div><div class="r">${SALES.length} nhân viên, quản lý ${EMP[1].TenVietTat}</div></div><span class="cnt" title="Số KPI đạt hoặc đúng tiến độ">${okN}/6</span></div>`;
+    else h+=`<div class="rowh nav ${line}" tabindex="0" role="link" data-open="${e}" title="Xem báo cáo của ${esc(EMP[e].TenNV)}">
+      <div><div class="n">${EMP[e].TenNV}</div><div class="r">${EMP[e].MaNV}, mã CC ${EMP[e].MaChamCong}</div></div>
+      <span><span class="cnt" title="Số KPI đạt hoặc đúng tiến độ">${okN}/6</span><span class="chev" aria-hidden="true">›</span></span></div>`;
+    rs.forEach(r=>{h+=`<div class="cell ${line} ${state.kpi===r.kpi?'band':''} ${e==='all'?'r-all':''}" data-kpi="${r.kpi}" title="${esc(r.label)}">
+      <i class="sq st-${r.st}"></i><span class="val">${r.big}</span><small>${cellSmall(r)}</small></div>`});
+  });
+  document.getElementById('view').innerHTML=`<section class="board dept" aria-label="Bảng điểm KPI toàn phòng">${h}</section>
+    <section class="detail side" aria-live="polite">${detailInner('all',150)}</section>`;
+}
+
+/* ---------- Cấp 2: Chi tiết từng nhân viên ---------- */
+function renderEmp(){
+  const Q=curQ(), e=state.emp, E=EMP[e], C=meKey(state.cut), rs=DIM_KPI.map(k=>R_(k.KPIKey,e));
+  const scope=`<div class="scope"><div class="q" title="${esc(E.TenNV)}">${E.TenNV}</div><div class="c">${E.MaNV}, mã CC ${E.MaChamCong}</div>
+    <div class="c">${Q.label}, số liệu đến ${dd(C)}</div>${timeBlock()}
+    <div class="legend" style="flex-direction:row;gap:10px"><span><i class="sq st-ok"></i>Đạt</span><span><i class="sq st-warn"></i>Chú ý</span><span><i class="sq st-bad"></i>Chậm</span></div></div>`;
+  // bảng tiến độ theo tháng + xếp hạng
+  let t=`<table class="prog"><thead><tr><th>Chỉ số</th>${Q.months.map(i=>`<th>${dd(meKey(i))}</th>`).join('')}<th title="Xếp hạng trong phòng tại ngày chốt">Hạng</th></tr></thead><tbody>`;
+  for(const k of DIM_KPI){
+    const rk=rankOf(k.KPIKey,e,Q,state.cut);
+    t+=`<tr class="kr ${state.kpi===k.KPIKey?'band':''}" data-kpi="${k.KPIKey}" tabindex="0" role="button"><td>${k.Ten}<small>Target ${k.KPIKey===1||k.KPIKey===3?money(targetOf(e,k.KPIKey,Q)):k.KPIKey===5?'≤ 20%':k.KPIKey===6?'100%':targetOf(e,k.KPIKey,Q)}</small></td>`;
+    for(const i of Q.months){
+      if(i>state.cut||i>M_LAST){t+=`<td class="fut">–</td>`;continue}
+      const r=kpiResult(k.KPIKey,e,Q,i); t+=`<td><span class="pv"><i class="sq st-${r.st}"></i>${r.big}</span></td>`;
+    }
+    t+=`<td class="rank">${rk?rk+' <small>/ '+SALES.length+'</small>':'–'}</td></tr>`;
+  }
+  t+='</tbody></table>';
+  // tóm tắt việc cần ưu tiên
+  const daysLeft=Math.max(0,diffDays(C,Q.end)), items=[];
+  for(const r of [...rs].sort((a,b)=>({bad:0,warn:1}[a.st]??2)-({bad:0,warn:1}[b.st]??2))){
+    if(r.st!=='bad'&&r.st!=='warn') continue;
+    const n=DIM_KPI[r.kpi-1].Ten; let s;
+    if(r.kpi<=4){const gap=Math.max(0,r.target-r.actual);
+      s=`<b>${n}</b> đạt ${r.big}, còn thiếu ${r.kpi===1||r.kpi===3?money(gap):gap+(r.kpi===2?' KH':' dự án')}${daysLeft?` trong ${daysLeft} ngày còn lại của quý.`:'.'}`}
+    else if(r.kpi===5) s=`<b>${n}</b> là ${r.big}, vượt ngưỡng 20%. Xem lại dự báo các mã có sai số cao.`;
+    else s=`<b>${n}</b>: ${r.d-r.n} dự án đã gửi mẫu chưa có kết quả trả về R&D.`;
+    items.push(`<li><i class="sq st-${r.st}"></i><span>${s}</span></li>`);
+  }
+  const sum=`<div class="sum"><h3>Cần ưu tiên</h3>${items.length?`<ul>${items.slice(0,3).join('')}</ul>`:'<div class="c-ok">Tất cả KPI đang đạt hoặc đúng tiến độ.</div>'}</div>`;
+  document.getElementById('view').innerHTML=`
+    <section class="board emp" aria-label="KPI của ${esc(E.TenNV)}">${scope}${tilesHTML(e)}</section>
+    <div class="lower">
+      <section class="card"><div class="dh"><h2>Tiến độ theo tháng<span>lũy kế tại ngày chốt, xếp hạng tại ${dd(C)}</span></h2></div>${t}${sum}</section>
+      <section class="card detail stack" aria-live="polite">${detailInner(e,150)}</section>
+    </div>`;
+}
+
+function render(){renderHeader(); state.view==='dept'?renderDept():renderEmp()}
+
+document.addEventListener('click',ev=>{
+  const t=ev.target;
+  const q=t.closest('[data-q]'); if(q){state.q=+q.dataset.q;state.cut=Math.min(curQ().months[2],M_LAST);render();return}
+  const c=t.closest('[data-cut]'); if(c){state.cut=+c.dataset.cut;render();return}
+  const g=t.closest('[data-go]'); if(g){state.view='dept';render();return}
+  const o=t.closest('[data-open]'); if(o){state.view='emp';state.emp=+o.dataset.open;render();return}
+  const k=t.closest('[data-kpi]'); if(k){state.kpi=+k.dataset.kpi;render();}
+});
+document.addEventListener('change',ev=>{if(ev.target.id==='empSel'){state.emp=+ev.target.value;render()}});
+document.addEventListener('keydown',ev=>{
+  if((ev.key==='Enter'||ev.key===' ')&&ev.target.matches('[role="button"],[role="link"]')){ev.preventDefault();const d=ev.target.dataset;ev.target.click();
+    const n=d.kpi?document.querySelector(`.tile[data-kpi="${d.kpi}"]`):d.open?document.getElementById('empSel'):null; if(n) n.focus();}
+});
+function fit(){
+  const s=Math.min(1,(document.documentElement.clientWidth-16)/1280);
+  document.getElementById('stage').style.transform=`scale(${s})`;
+  const fr=document.getElementById('frame'); fr.style.width=1280*s+'px'; fr.style.height=720*s+'px';
+}
+window.addEventListener('resize',fit);
+fit(); render();
+</script>
+</body>
+</html>
