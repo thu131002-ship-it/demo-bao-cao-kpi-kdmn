@@ -443,7 +443,7 @@ svg .bar{cursor:pointer}
 .dt3 .f{font-size:11px;line-height:16px;color:var(--muted);margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .t3{font-size:12px;line-height:20px;font-weight:600;color:#3B4A5A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .t3 small{font-weight:400;color:var(--faint);font-size:11px;margin-left:6px}
-.tb2 .t3{height:26px;line-height:26px;padding-right:176px}
+.tb2 .t3{height:26px;line-height:26px;padding-right:146px}
 .ft1{border-top:1px solid var(--line);padding-top:10px;font-size:10.5px}
 /* ===== Overlay Hướng dẫn / Chú thích ===== */
 .ovw{z-index:50}
@@ -457,6 +457,26 @@ svg .bar{cursor:pointer}
 .ovg{display:grid;grid-template-columns:1fr 1.4fr;gap:28px}
 .ovx{margin-top:14px;border:0;border-radius:8px;background:var(--accent);color:#fff;padding:7px 18px;font-size:12px;font-weight:600;cursor:pointer;float:right}
 @media print{.ovw{display:none !important}}
+
+/* ===== Trạng thái Tổng quan của vùng chi tiết ===== */
+.dt3{position:relative}
+.dt3 .h{padding-right:96px}
+.back2{position:absolute;right:0;top:0;border:0;border-radius:8px;background:var(--bg);color:var(--accent);font-size:12px;font-weight:600;padding:3px 10px;cursor:pointer}
+.back2:hover{text-decoration:underline}
+.cap{font-size:10.5px;line-height:15px;color:var(--muted);margin:2px 0 6px}
+.ovt td{padding:3px 6px;height:24px;vertical-align:middle}
+.ovt th{padding:4px 6px}
+.ovt svg{display:block}
+.lgc2{display:flex;gap:14px;font-size:10.5px;line-height:16px;color:var(--muted);margin:4px 0 10px}
+.lgc2 span{display:flex;align-items:center;gap:5px}
+.sw{width:9px;height:9px;border-radius:2px;display:inline-block}
+.sb{display:flex;flex-direction:column;gap:7px}
+.sbr{display:grid;grid-template-columns:150px 1fr;align-items:center;gap:10px}
+.sbl{font-size:11.5px;line-height:15px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbb{display:flex;height:16px;border-radius:3px;overflow:hidden;background:var(--line)}
+.sbb i{display:flex;align-items:center;justify-content:center;font-style:normal;font-size:10px;font-weight:600;color:#062F4F}
+.db{height:10px;background:var(--line);border-radius:3px;overflow:hidden}
+.db i{display:block;height:100%;background:#062F4F;opacity:.75}
 </style>
 </head>
 <body>
@@ -761,7 +781,7 @@ const L=24, RH=150, LW=812, CW=(LW-RH)/6, RX=L+LW+16, RW=404;
 const colX=i=>L+RH+i*CW;
 const Y={grp:180,card:180,cardH:148,mtx:340,foot:664};
 
-const state={ov:null,role:'mgr',page:'dept',q:3,cut:mi(2026,8),cutSel:mi(2026,8),emp:null,cust:null,bm:1,pbi:false,hist:[],sel:{},sort:{}};
+const state={ov:null,role:'mgr',page:'dept',q:3,cut:mi(2026,8),cutSel:mi(2026,8),emp:null,cust:null,bm:null,pbi:false,hist:[],sel:{},sort:{}};
 const curQ=()=>QS[state.q-1], C_=()=>meKey(state.cut);
 const R_=(k,e)=>kpiResult(k,e,curQ(),state.cut);
 // Phạm vi mà các visual đang bị lọc: trang 1 lọc theo dòng được chọn trong Matrix, trang 2 theo drillthrough
@@ -953,9 +973,9 @@ function tableVisual(k,e,TOP=5){
   }
   if(k===4){
     const rows=FACT_PROJECT.filter(p=>inScope(e,p)&&p.DateKey_GhiNhan>=Q.start&&p.DateKey_GhiNhan<=C&&inM(p.DateKey_GhiNhan));
-    return {n:rows.length,t:'Dự án ghi nhận trong quý'+mTxt,h:tbl('t4',[{h:'Dự án',w:'21%',f:r=>r.MaDuAn,s:r=>r.MaDuAn},{h:'Khách hàng',w:'45%',f:r=>CUS[r.CustomerKey].TenKH,s:r=>CUS[r.CustomerKey].TenKH},
-      {h:'Ghi nhận',w:'17%',num:true,f:r=>dd(r.DateKey_GhiNhan),s:r=>r.DateKey_GhiNhan},
-      {h:'Tính KPI',w:'17%',f:r=>CUS[r.CustomerKey].NhomKH!=='Thường'?dot('ok','Có'):dot('na','Không'),s:r=>CUS[r.CustomerKey].NhomKH!=='Thường'?1:0}],rows,'Không có dự án.',{top:TOP,cust})};
+    return {n:rows.length,t:'Dự án ghi nhận trong quý'+mTxt,h:tbl('t4',[{h:'Dự án',w:'19%',f:r=>r.MaDuAn,s:r=>r.MaDuAn},{h:'Khách hàng',w:'42%',f:r=>CUS[r.CustomerKey].TenKH,s:r=>CUS[r.CustomerKey].TenKH},
+      {h:'Ghi nhận',w:'16%',num:true,f:r=>dd(r.DateKey_GhiNhan),s:r=>r.DateKey_GhiNhan},
+      {h:'Tính KPI',w:'23%',f:r=>CUS[r.CustomerKey].NhomKH!=='Thường'?dot('ok','Có'):dot('na','Không'),s:r=>CUS[r.CustomerKey].NhomKH!=='Thường'?1:0}],rows,'Không có dự án.',{top:TOP,cust})};
   }
   if(k===5){
     const months=closedMonths(Q,state.cut).filter(i=>m==null||i===m), rows=[];
@@ -972,20 +992,70 @@ function tableVisual(k,e,TOP=5){
     {h:'KH phản hồi',w:'42%',f:r=>r.done?`<span class="dim">${dd(r.DateKey_KHPhanHoi)}: ${r.KetQuaPhanHoi}</span>`:dot('bad','Chờ '+diffDays(r.DateKey_GuiMau,C)+' ngày'),s:r=>r.done?1:0}],rows,'Không có dự án.',{top:TOP,cust,tip:r=>tt([['Mã dự án',r.MaDuAn],['Khách hàng',CUS[r.CustomerKey].TenKH],['Gửi mẫu',ddmmyyyy(r.DateKey_GuiMau)],['KH phản hồi',r.done?ddmmyyyy(r.DateKey_KHPhanHoi)+', '+r.KetQuaPhanHoi:'Chưa có']])})};
 }
 
+/* ---------- Vùng chi tiết, trạng thái mặc định: Tổng quan 6 chỉ số (bookmark mặc định) ---------- */
+function sparkSVG(vals,W=86,H=18){
+  const pts=vals.map((v,i)=>v==null?null:[4+i*(W-8)/Math.max(1,vals.length-1),v]).filter(Boolean);
+  if(!pts.length) return '';
+  const lo=Math.min(.5,...pts.map(p=>p[1])), hi=Math.max(1.3,...pts.map(p=>p[1]));
+  const y=v=>H-3-(v-lo)/(hi-lo)*(H-6), last=pts[pts.length-1];
+  return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true"><line x1="2" x2="${W-2}" y1="${y(1)}" y2="${y(1)}" stroke="#C9CDD3" stroke-dasharray="2 2"/>`+
+    `<polyline points="${pts.map(p=>p[0]+','+y(p[1])).join(' ')}" fill="none" stroke="#062F4F" stroke-width="1.5"/>`+
+    `<circle cx="${last[0]}" cy="${y(last[1])}" r="2.6" fill="#062F4F"/></svg>`;
+}
+function overviewArea(e,interNote){
+  const Q=curQ(), P=16, T=Y.grp, months=Q.months.filter(i=>i<=state.cut&&i<=M_LAST);
+  let h=V({pbi:'Shape: Rectangle',it:'Nền vùng chi tiết',x:RX,y:T,w:RW,h:700-T,cls:'shape',inner:''});
+  h+=V({pbi:'Text box (giá trị động)',it:'Bookmark mặc định "Tổng quan". '+interNote,x:RX+P,y:T+14,w:RW-2*P,h:52,cls:'clear dt3',
+    inner:`<div class="h">Tổng quan 6 chỉ số<span>${e==='all'?'Toàn phòng':EMP[e].TenNV}</span></div><div class="f">Bấm vào một thẻ chỉ số để xem chi tiết của chỉ số đó.</div>`});
+  // 1. Table + sparkline: mức đạt so với yêu cầu
+  let t=`<table class="lst ovt"><colgroup><col style="width:46%"><col style="width:30%"><col style="width:24%"></colgroup><thead><tr><th>Chỉ số</th><th>Theo ngày chốt</th><th class="num">So với yêu cầu</th></tr></thead><tbody>`;
+  for(const k of ORDER){
+    const series=months.map(i=>{const r=kpiResult(k,e,Q,i);return r.st==='na'?null:Math.min(severity(r),1.5)});
+    const r=R_(k,e), cur=r.st==='na'?null:severity(r), curTxt=cur==null?'':cur>1.5?'> 150%':pct(cur);
+    t+=`<tr data-tt="${tt([['Chỉ số',DIM_KPI[k-1].Ten],...months.map((i,j)=>['Đến '+dd(meKey(i)),series[j]==null?'–':pct(series[j])]),['Trạng thái',r.label]])}"><td>${DIM_KPI[k-1].Ten}</td><td>${sparkSVG(series)}</td>
+      <td class="num">${cur==null?'<span class="c-na">–</span>':r.st==='ok'?curTxt:`<span class="tag" style="justify-content:flex-end"><i class="sq st-${r.st}"></i><span class="c-${r.st}">${curTxt}</span></span>`}</td></tr>`;
+  }
+  t+='</tbody></table>';
+  h+=V({pbi:'Table + Sparkline',it:'Sparkline theo Dim_Cutoff. Cột Hiện tại: icon theo điều kiện. '+interNote,x:RX+P,y:T+74,w:RW-2*P,h:236,cls:'clear',
+    inner:`<div class="t3">Mức đạt so với yêu cầu</div><div class="cap">100% (vạch đứt) nghĩa là vừa đúng yêu cầu của chỉ số.</div>${t}`});
+  // 2. Phân bố nhân viên theo trạng thái, hoặc hạng của nhân viên
+  const y2=T+322, h2=700-P-y2;
+  if(e==='all'){
+    let b=`<div class="t3">Nhân viên theo trạng thái</div><div class="lgc2"><span><i class="sw" style="background:var(--ok)"></i>Đạt, đúng tiến độ</span><span><i class="sw" style="background:var(--warn)"></i>Cần chú ý</span><span><i class="sw" style="background:var(--bad)"></i>Chậm, không đạt</span></div><div class="sb">`;
+    for(const k of ORDER){
+      const c={ok:0,warn:0,bad:0,na:0}; SALES.forEach(s=>c[R_(k,s.EmployeeKey).st]++);
+      const n=SALES.length-c.na||1;
+      b+=`<div class="sbr"><span class="sbl">${DIM_KPI[k-1].Ten}</span><span class="sbb">`+['ok','warn','bad'].map(st=>c[st]?`<i style="width:${c[st]/n*100}%;background:var(--${st})" data-tt="${tt([['Chỉ số',DIM_KPI[k-1].Ten],['Trạng thái',{ok:'Đạt, đúng tiến độ',warn:'Cần chú ý',bad:'Chậm, không đạt'}[st]],['Số nhân viên',c[st]+' / '+SALES.length]])}">${c[st]}</i>`:'').join('')+`</span></div>`;
+    }
+    b+='</div>';
+    h+=V({pbi:'100% stacked bar chart',it:'Trục: Dim_KPI. Legend: Trạng thái (màu theo trạng thái nên legend khớp). Edit interactions: None từ Matrix',x:RX+P,y:y2,w:RW-2*P,h:h2,cls:'clear',inner:b});
+  } else {
+    let b=`<div class="t3">Hạng trong phòng</div><div class="cap">Thanh càng dài, hạng càng cao. Tổng số ${SALES.length} nhân viên.</div><table class="lst ovt"><colgroup><col style="width:46%"><col style="width:36%"><col style="width:18%"></colgroup><tbody>`;
+    for(const k of ORDER){
+      const rk=rankOf(k,e,Q,state.cut), w=rk?(SALES.length-rk+1)/SALES.length*100:0;
+      b+=`<tr><td>${DIM_KPI[k-1].Ten}</td><td><div class="db"><i style="width:${w}%"></i></div></td><td class="num">${rk?rk+' / '+SALES.length:'–'}</td></tr>`;
+    }
+    b+='</tbody></table>';
+    h+=V({pbi:'Table + Data bars',it:'Cột HangTrongPhong tính sẵn ở ETL. '+interNote,x:RX+P,y:y2,w:RW-2*P,h:h2,cls:'clear',inner:b});
+  }
+  return h;
+}
+
 /* ---------- Vùng chi tiết: đổi theo thẻ KPI được bấm (bookmark), không cần navigator riêng ---------- */
 function detailArea(e,interNote){
+  if(!state.bm) return overviewArea(e,interNote);
   const k=state.bm, kp=DIM_KPI[k-1], P=16, T=Y.grp;
   const big=k===2, chH=big?226:180, tY=T+84+chH+10, tH=700-P-tY, topN=Math.max(3,Math.floor((tH-60)/25));
   let h=V({pbi:'Shape: Rectangle',it:'Nền vùng chi tiết',x:RX,y:T,w:RW,h:700-T,cls:'shape',inner:''});
   h+=V({pbi:'Text box (giá trị động)',it:'Cấp 1 của vùng: tên chỉ số. '+interNote,x:RX+P,y:T+14,w:RW-2*P,h:66,cls:'clear dt3',
-    inner:`<div class="h">${kp.Ten}<span>${e==='all'?'Toàn phòng':EMP[e].TenNV}</span></div><div class="f">${kp.CongThuc}</div>`});
+    inner:`<button type="button" class="back2" data-bm="0">‹ Tổng quan</button><div class="h">${kp.Ten}<span>${e==='all'?'Toàn phòng':EMP[e].TenNV}</span></div><div class="f">${kp.CongThuc}</div>`});
   const ch=chartVisual(k,e,RW-2*P+8,chH-44);
   h+=V({pbi:ch.pbi,it:'Cấp 2. Bấm cột: lọc chéo bảng bên dưới. '+interNote,x:RX+P-8,y:T+84,w:RW-2*P+8,h:chH,cls:'clear cv2',inner:`<div class="t3" style="padding-left:8px">${ch.t}</div>${ch.body}`});
   const tb=tableVisual(k,e,topN);
   if(tb.n>topN) tb.t+=` <small>top ${topN} / ${tb.n}</small>`;
   const hasCust=state.sel.src==='table'&&state.sel.cust;
   h+=V({pbi:'Table',it:`Cấp 2. Filter Top N = ${topN}, tiêu đề động (fx). Chuột phải: Drill through. `+interNote,x:RX+P,y:tY,w:RW-2*P,h:tH,cls:'clear tb2',inner:`<div class="t3">${tb.t}</div><div class="sc">${tb.h}</div>`});
-  if(k!==5) h+=V({pbi:'Button: Drill through',it:'Đích: Hồ sơ khách hàng. Chữ động theo lựa chọn',x:RX+RW-P-170,y:tY,w:170,h:26,cls:'clear',
+  if(k!==5) h+=V({pbi:'Button: Drill through',it:'Đích: Hồ sơ khách hàng. Chữ động theo lựa chọn',x:RX+RW-P-140,y:tY,w:140,h:26,cls:'clear',
     inner:`<button class="pbtn sec" data-dtbtn="cust" ${hasCust?'':'disabled'}>${hasCust?'Mở hồ sơ: '+esc(CUS[state.sel.cust].TenKH.replace(/^(Cty TNHH|Cty CP|Cơ sở) /,''))+' ›':'Chọn 1 khách hàng'}</button>`});
   return h;
 }
@@ -1029,7 +1099,7 @@ function pageDept(){
   const MH=Y.foot-16-Y.mtx, rows=['all',...SALES.map(s=>s.EmployeeKey)], tH=58,hH=52, rH=(MH-tH-hH-8)/rows.length;
   const selE=state.sel.src==='matrix'?state.sel.emp:null, ci=ORDER.indexOf(state.bm);
   h+=V({pbi:'Shape: Rectangle',it:'Nền matrix',x:L,y:Y.mtx,w:LW,h:MH,cls:'shape',inner:''});
-  h+=V({pbi:'Shape: dải cột',it:'Bật/tắt theo bookmark, nằm sau matrix trong suốt',x:Math.round(colX(ci)),y:Y.mtx+tH,w:Math.round(CW),h:MH-tH-8,cls:'clear',inner:'<div style="height:100%;background:var(--band)"></div>'});
+  if(ci>=0) h+=V({pbi:'Shape: dải cột',it:'Bật/tắt theo bookmark, nằm sau matrix trong suốt',x:Math.round(colX(ci)),y:Y.mtx+tH,w:Math.round(CW),h:MH-tH-8,cls:'clear',inner:'<div style="height:100%;background:var(--band)"></div>'});
   let m=`<div class="t2" style="padding:16px 16px 0">Kết quả theo nhân viên</div><div class="hint">Chọn một dòng để lọc thẻ và phần chi tiết. Mở báo cáo của người đó bằng nút bên phải hoặc chuột phải.</div>
     <div class="mtx big" style="height:${MH-tH-8}px;margin-top:${tH-54}px;grid-template-columns:${RH}px repeat(6,1fr);grid-template-rows:${hH}px repeat(${rows.length},${rH}px)">`;
   m+=`<div class="mh">Nhân viên</div>`+ORDER.map(k=>`<div class="mh ${state.bm===k?'on':''}">${DIM_KPI[k-1].Ten}</div>`).join('');
@@ -1065,7 +1135,7 @@ function pageEmp(){
   h+=cardsRow(e,inter);
   const MH=Y.foot-16-Y.mtx,tH=58,hH=40,rH=(MH-tH-hH-8)/6, ri=ORDER.indexOf(state.bm);
   h+=V({pbi:'Shape: Rectangle',it:'Nền matrix',x:L,y:Y.mtx,w:LW,h:MH,cls:'shape',inner:''});
-  h+=V({pbi:'Shape: dải hàng',it:'Bật/tắt theo bookmark',x:L,y:Math.round(Y.mtx+tH+hH+ri*rH),w:LW,h:Math.round(rH),cls:'clear',inner:'<div style="height:100%;background:var(--band)"></div>'});
+  if(ri>=0) h+=V({pbi:'Shape: dải hàng',it:'Bật/tắt theo bookmark',x:L,y:Math.round(Y.mtx+tH+hH+ri*rH),w:LW,h:Math.round(rH),cls:'clear',inner:'<div style="height:100%;background:var(--band)"></div>'});
   let m=`<div class="t2" style="padding:16px 16px 0">Tiến độ theo tháng chốt</div><div class="hint">Lũy kế tại từng ngày chốt. Bấm vào thẻ chỉ số phía trên để xem chi tiết ở bên phải.</div>
     <div class="mtx pg big" style="height:${MH-tH-8}px;margin-top:${tH-54}px;grid-template-columns:300px 110px repeat(3,1fr) 96px;grid-template-rows:${hH}px repeat(6,${rH}px)">`;
   m+=`<div class="mh">Chỉ số</div><div class="mh num">Target</div>`+Q.months.map(i=>`<div class="mh num">Đến ${dd(meKey(i))}</div>`).join('')+`<div class="mh num">Hạng</div>`;
@@ -1167,7 +1237,7 @@ document.addEventListener('click',ev=>{
   const cm=t.closest('[data-ctx]'); if(cm){const [pg,key]=cm.dataset.ctx.split(':');hideCtx();drill(pg,pg==='emp'?{emp:key==='all'?'all':+key}:{cust:+key});return}
   const b=t.closest('[data-dtbtn]'); if(b&&!b.disabled){const s=state.sel;
     if(b.dataset.dtbtn==='emp') drill('emp',{emp:s.emp==='all'?'all':+s.emp}); else if(b.dataset.dtbtn==='ins') drill('emp',{emp:+s.emp}); else drill('cust',{cust:+s.cust}); return}
-  const bm=t.closest('[data-bm]'); if(bm){state.bm=+bm.dataset.bm;if(state.sel.src==='chart'||state.sel.src==='table')state.sel={};render();return}
+  const bm=t.closest('[data-bm]'); if(bm){state.bm=(+bm.dataset.bm)||null;if(state.sel.src==='chart'||state.sel.src==='table')state.sel={};render();return}
   const so=t.closest('[data-sort]'); if(so){const [id,ci]=so.dataset.sort.split(':');const cur=state.sort[id];
     state.sort[id]=cur&&cur.c===+ci?{c:+ci,d:-cur.d}:{c:+ci,d:-1};render();return}
   const mr=t.closest('[data-mrow]'); if(mr){toggleSel({src:'matrix',emp:mr.dataset.mrow==='all'?'all':+mr.dataset.mrow});return}
@@ -1220,7 +1290,7 @@ function roleBar(){
 }
 function setRole(r){
   state.role=r;
-  Object.assign(state,isMgr()?{page:'dept',emp:null}:{page:'emp',emp:r},{sel:{},hist:[],cust:null,bm:1});
+  Object.assign(state,isMgr()?{page:'dept',emp:null}:{page:'emp',emp:r},{sel:{},hist:[],cust:null,bm:null});
   roleBar(); render();
 }
 document.addEventListener('click',ev=>{const b=ev.target.closest('[data-role]'); if(!b) return;
